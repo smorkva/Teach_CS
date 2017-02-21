@@ -32,6 +32,7 @@ namespace CryptoMask
             {
                 _result[_i] = (byte)(data[_i] ^ _key[_i % _key.Length]);
             }
+
             return _result;
         }
         /// <summary>
@@ -50,7 +51,7 @@ namespace CryptoMask
         /// <returns>Encrypted data</returns>
         public byte[] Encode(string data)
         {
-            return Encode(UTF8Encoding.GetEncoding("utf-8").GetBytes(data));
+            return Encode(UTF8Encoding.UTF8.GetBytes(data));
         }
         /// <summary>
         /// Decode information
@@ -59,7 +60,7 @@ namespace CryptoMask
         /// <returns>Decoded string</returns>
         public string DecodeToString(byte[] data)
         {
-            return UTF8Encoding.GetEncoding("utf-8").GetString(Encode(data));
+            return UTF8Encoding.UTF8.GetString(Encode(data));
         }
     }
 }
