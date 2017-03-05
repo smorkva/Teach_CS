@@ -156,7 +156,8 @@ namespace DataBaseTest
             CollectionAssert.AreEqual(result, ids);
         }
 
-        private DataTransport[] _carList = new DataTransport[] {
+        private DataTransport[] _carList = new DataTransport[] 
+        {
             new Car("Car 1", "ed3456V", 4, 120, true),
             new Car("Car 2", "sd3465J", 5, 230, false),
             new Car("Car 3", "bv4563B", 4, 150, false),
