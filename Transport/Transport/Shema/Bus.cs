@@ -4,10 +4,8 @@ namespace Transport.Shema
 {
     public class Bus : DataTransport
     {
-        public Bus(string name, string number, byte wheelCount, int maxSpeed, string route) :
-            base(name, number, wheelCount, maxSpeed)
+        public Bus()
         {
-            this.Route = route;
         }
         
         [DataMember]

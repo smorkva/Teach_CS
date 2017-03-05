@@ -9,7 +9,7 @@ namespace DataBaseTest
         [TestMethod]
         public void TransportEqualObjectTest()
         {
-            var transport = new Bus("Some Bus", "ab1234U", 4, 110, "A-B");
+            var transport = new Bus() { Name = "Some Bus", Number = "ab1234U", WheelCount = 4, MaxSpeed = 110, Route = "A-B" };
             var copy = transport.Clone();
             
             Assert.IsTrue(transport.Equals(copy));
@@ -17,7 +17,7 @@ namespace DataBaseTest
         [TestMethod]
         public void TransportNotEqualChangedObjectTest()
         {
-            var transport = new Bus("Some Bus", "ab1234U", 4, 110, "A-B");
+            var transport = new Bus() { Name = "Some Bus", Number = "ab1234U", WheelCount = 4, MaxSpeed = 110, Route = "A-B" };
             var copy = transport.Clone();
             (copy as DataTransport).Number = "123";
 

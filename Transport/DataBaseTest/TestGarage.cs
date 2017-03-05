@@ -12,7 +12,7 @@ namespace DataBaseTest
         public void GarageInsertTransportCloneTest()
         {
             var garage = new Garage();
-            var car = new Car("Test car", "as1230F", 5, 140, false);
+            var car = new Car() { Name = "Test car", Number = "as1230F", WheelCount = 5, MaxSpeed = 140, InstalledGas = false };
             garage.Store(car);
             var copy = car.Clone();
             garage.Store(copy as Car);
@@ -24,7 +24,7 @@ namespace DataBaseTest
         {
             var garage = new Garage();
             var writedName = "New name";
-            var car = new Car("Car", "as1230F", 5, 140, false);
+            var car = new Car(){ Name = "Car", Number = "as1230F", WheelCount = 5, MaxSpeed = 140, InstalledGas = false };
             var id = garage.Store(car);
 
             car.Name = writedName;
@@ -37,8 +37,8 @@ namespace DataBaseTest
         public void GarageCountTransportTest()
         {
             var garage = new Garage();
-            var car = new Car("Car", "as1230F", 5, 140, false);
-            var anotherCar = new Car("Another car", "ae5622F", 4, 120, false);
+            var car = new Car() { Name = "Car", Number = "as1230F", WheelCount = 5, MaxSpeed = 140, InstalledGas = false };
+            var anotherCar = new Car() { Name = "Another car", Number = "ae5622F", WheelCount = 4, MaxSpeed = 120, InstalledGas = false };
             garage.Store(car);            
             garage.Store(anotherCar);
 
@@ -52,7 +52,7 @@ namespace DataBaseTest
             _fillGarage(garage);
             var transport = garage.GetTransport(carName);
 
-            Assert.AreEqual(carName, transport.Name);
+            Assert.AreEqual(carName, transport?.Name);
         }
         [TestMethod]
         public void GarageFindByIdTest()
@@ -62,7 +62,7 @@ namespace DataBaseTest
             _fillGarage(garage);
             var transport = garage.GetTransport(5);
 
-            Assert.AreEqual(carName, transport.Name);
+            Assert.AreEqual(carName, transport?.Name);
         }
         [TestMethod]
         public void GarageFindByExpressionTest()
@@ -76,6 +76,37 @@ namespace DataBaseTest
             CollectionAssert.AreEqual(filtred, transports);
         }
         [TestMethod]
+        public void GarageFindByWrongNameTest()
+        {
+            var carName = "Wrong name";
+            var garage = new Garage();
+            _fillGarage(garage);
+            var transport = garage.GetTransport(carName);
+
+            Assert.AreNotEqual(carName, transport?.Name);
+        }
+        [TestMethod]
+        public void GarageFindByWrongIdTest()
+        {
+            var carName = "Bus 1";
+            var garage = new Garage();
+            _fillGarage(garage);
+            var transport = garage.GetTransport(50);
+
+            Assert.AreNotEqual(carName, transport?.Name);
+        }
+        [TestMethod]
+        public void GarageFindByWrongExpressionTest()
+        {
+            var garage = new Garage();
+            _fillGarage(garage);
+
+            var transports = garage.GetTransports(t => t.MaxSpeed == 13);
+            var filtred = _carList.Where(t => t.MaxSpeed < 90).ToArray();
+
+            CollectionAssert.AreNotEqual(filtred, transports);
+        }
+        [TestMethod]
         public void GarageEnumerateTest()
         {
             var garage = new Garage();
@@ -85,6 +116,16 @@ namespace DataBaseTest
             var filtred = _carList.Where(t => t.MaxSpeed < 90).ToArray();
 
             CollectionAssert.AreEqual(filtred, enumerator);
+        }
+        [TestMethod]
+        public void GarageManualEnumerateTest()
+        {
+            var garage = new Garage();
+            _fillGarage(garage);
+
+            var fromManualEnumerator = garage.ToArray();
+
+            CollectionAssert.AreEqual(_carList, fromManualEnumerator);
         }
         [TestMethod]
         public void GarageRemoveByNameTest()
@@ -142,32 +183,32 @@ namespace DataBaseTest
         public void GarageInsertAfterLoadTest()
         {
             string pathToFile = "./base.json";
-            var result = new uint[] { 1, 2 };
+            var result = new int[] { 1, 2 };
             var garage = new Garage();
-            var car = new Car("One car", "et2314fd", 4, 123, false);
+            var car = new Car() { Name = "One car", Number = "et2314fd", WheelCount = 4, MaxSpeed = 123, InstalledGas = false };
             garage.Store(car);
             garage.Save(pathToFile);
 
             var newGarage = new Garage(pathToFile);
-            var car2 = new Car("Two car", "wr6346fg", 3, 98, false);
+            var car2 = new Car() { Name = "Two car", Number = "wr6346fg", WheelCount = 3, MaxSpeed = 98, InstalledGas = false };
             newGarage.Store(car2);
             var ids = newGarage.GetIds();
 
             CollectionAssert.AreEqual(result, ids);
         }
 
-        private DataTransport[] _carList = new DataTransport[] 
+        private DataTransport[] _carList = new DataTransport[]
         {
-            new Car("Car 1", "ed3456V", 4, 120, true),
-            new Car("Car 2", "sd3465J", 5, 230, false),
-            new Car("Car 3", "bv4563B", 4, 150, false),
-            new Car("Car 4", "xc2345N", 4, 110, true),
-            new Bus("Bus 1", "nb2345M", 4, 90, "A-B"),
-            new Bus("Bus 2", "xc2456E", 8, 140, "A-C"),
-            new Bus("Bus 3", "qw3456T", 6, 120, "C-B"),
-            new Bus("Bus 4", "ab3567Y", 4, 100, "A-D"),
-            new Bike("Bike 1", "re7257W", 2, 60, "Red", true),
-            new Bike("Bike 2", "bf4562D", 2, 28, "Green", false),
+            new Car() {Name = "Car 1", Number = "ed3456V", WheelCount = 4, MaxSpeed = 120, InstalledGas = true },
+            new Car() {Name = "Car 2", Number = "sd3465J", WheelCount = 5, MaxSpeed = 230, InstalledGas = false },
+            new Car() {Name = "Car 3", Number = "bv4563B", WheelCount = 4, MaxSpeed = 150, InstalledGas = false },
+            new Car() {Name = "Car 4", Number = "xc2345N", WheelCount = 4, MaxSpeed = 110, InstalledGas = true },
+            new Bus() {Name = "Bus 1", Number = "nb2345M", WheelCount = 4, MaxSpeed = 90,  Route = "A-B" },
+            new Bus() {Name = "Bus 2", Number = "xc2456E", WheelCount = 8, MaxSpeed = 140, Route = "A-C" },
+            new Bus() {Name = "Bus 3", Number = "qw3456T", WheelCount = 6, MaxSpeed = 120, Route = "C-B" },
+            new Bus() {Name = "Bus 4", Number = "ab3567Y", WheelCount = 4, MaxSpeed = 100, Route = "A-D" },
+            new Bike() {Name = "Bike 1", Number = "re7257W", WheelCount = 2, MaxSpeed = 60, ColorOfPedal = "Red", IsElectric = true },
+            new Bike() {Name = "Bike 2", Number = "bf4562D", WheelCount = 2, MaxSpeed = 28, ColorOfPedal = "Green", IsElectric = false },
         };
         private void _fillGarage(Garage garage)
         {

@@ -5,10 +5,8 @@ namespace Transport.Shema
 {
     public class Car : DataTransport
     {
-        public Car(string name, string number, byte wheelCount, int maxSpeed, bool installedGas) : 
-            base(name, number, wheelCount, maxSpeed)
+        public Car()
         {
-            InstalledGas = installedGas;
         }
 
         [DataMember]

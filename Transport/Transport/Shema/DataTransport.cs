@@ -5,6 +5,10 @@ namespace Transport.Shema
 {
     public abstract class DataTransport : ICloneable
     {
+        public DataTransport()
+        {
+        }
+
         [DataMember]
         public string Name { get; set; }
         [DataMember]
@@ -14,13 +18,6 @@ namespace Transport.Shema
         [DataMember]
         public int MaxSpeed { get; set; }
         
-        public DataTransport(string name, string number, byte wheelCount, int maxSpeed)
-        {
-            Name = name;
-            Number = number;
-            WheelCount = wheelCount;
-            MaxSpeed = maxSpeed;
-        }
         protected bool Equals(DataTransport other)
         {
             return GetHashCode().Equals(other.GetHashCode());

@@ -7,16 +7,17 @@ using System.Linq;
 
 namespace Transport
 {
+    using System.Collections;
     using Expression = Func<DataTransport, bool>;
 
-    public class Garage
+    public class Garage : IEnumerable<DataTransport>
     {
-        private Dictionary<uint, DataTransport> _items;
-        private uint _lastIndex = 0;
+        private Dictionary<int, DataTransport> _items;
+        private int _lastIndex = 0;
         
         public Garage()
         {
-            _items = new Dictionary<uint, DataTransport>();
+            _items = new Dictionary<int, DataTransport>();
         }
         public Garage(string path)
         {
@@ -38,32 +39,32 @@ namespace Transport
                 return _items.Count;
             }
         }
-        public void Store(uint key, DataTransport transport) => _items[key] = transport;
-        public uint Store(DataTransport transport)
+        public void Store(int key, DataTransport transport) => _items[key] = transport;
+        public int Store(DataTransport transport)
         {
             var id = FindId(transport);
 
-            if (null == id)
+            if (!id.HasValue)
             {
                 _items.Add(++_lastIndex, transport);
                 return _lastIndex;
             }
 
-            return (uint)id;
+            return id.GetValueOrDefault();
         }
 
-        private KeyValuePair<uint, DataTransport>? FindPair(uint id)
+        private KeyValuePair<int, DataTransport>? FindPair(int id)
         {
             var transport = default(DataTransport);
             if (_items.TryGetValue(id, out transport))
             {
-                return new KeyValuePair<uint, DataTransport>(id, transport);
+                return new KeyValuePair<int, DataTransport>(id, transport);
             }
 
             return null;
         }
-        private KeyValuePair<uint, DataTransport>? FindPair(string name) => FindPair(x => x.Name == name);
-        private KeyValuePair<uint, DataTransport>? FindPair(Expression function)
+        private KeyValuePair<int, DataTransport>? FindPair(string name) => FindPair(x => x.Name == name);
+        private KeyValuePair<int, DataTransport>? FindPair(Expression function)
         {
             var transports = GetEnumerator(function);
 
@@ -77,36 +78,25 @@ namespace Transport
 
             return null;
         }
-        private KeyValuePair<uint, DataTransport>? FindPair(DataTransport transport) => FindPair(_transport => _transport.Equals(transport));
+        private KeyValuePair<int, DataTransport>? FindPair(DataTransport transport) => FindPair(_transport => _transport.Equals(transport));
 
-        public uint? FindId(DataTransport transport) => FindPair(transport)?.Key;
-        public uint? FindId(string name) => FindPair(name)?.Key;
-        public uint[] GetIds() => _items.Select(t => t.Key).ToArray();
-        public uint[] GetIds(Expression function) => GetEnumerator(function).Select(t => t.Key).ToArray();
+        public int? FindId(DataTransport transport) => FindPair(transport)?.Key;
+        public int? FindId(string name) => FindPair(name)?.Key;
+        public int[] GetIds() => _items.Select(t => t.Key).ToArray();
+        public int[] GetIds(Expression function) => GetEnumerator(function).Select(t => t.Key).ToArray();
 
-        public DataTransport GetTransport(uint id) => FindPair(id)?.Value;
+        public DataTransport GetTransport(int id) => FindPair(id)?.Value;
         public DataTransport GetTransport(string name) => FindPair(name)?.Value;
         public DataTransport[] GetTransports() => _items.Select(t => t.Value).ToArray();
         public DataTransport[] GetTransports(Expression function) => GetEnumerator(function).Select(t => t.Value).ToArray();
         
-        public IEnumerable<KeyValuePair<uint, DataTransport>> GetEnumerator(Expression function)
-        {
-            foreach (var transport in _items)
-            {
-                if (function(transport.Value))
-                {
-                    yield return transport;
-                }
-            }
-        }
-
-        public void Remove(uint key) => _items.Remove(key);
+        public void Remove(int key) => _items.Remove(key);
         public void Remove(string name)
         {
             var id = FindId(name);
-            if (null != id)
+            if (id.HasValue)
             {
-                Remove((uint)id);
+                Remove(id.GetValueOrDefault());
             }
         }
         public void Remove(Expression function)
@@ -125,7 +115,7 @@ namespace Transport
                 using (var file = new StreamReader(path))
                 {
                     var json = file.ReadToEnd();
-                    _items = JsonConvert.DeserializeObject<Dictionary<uint, DataTransport>>(json, new JsonSerializerSettings
+                    _items = JsonConvert.DeserializeObject<Dictionary<int, DataTransport>>(json, new JsonSerializerSettings
                     {
                         TypeNameHandling = TypeNameHandling.Auto
                     });
@@ -161,5 +151,61 @@ namespace Transport
             }
         }
 
+        public IEnumerable<KeyValuePair<int, DataTransport>> GetEnumerator(Expression function)
+        {
+            foreach (var transport in _items)
+            {
+                if (function(transport.Value))
+                {
+                    yield return transport;
+                }
+            }
+        }
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public IEnumerator<DataTransport> GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public class Enumerator : IEnumerator<DataTransport>
+        {
+            private Garage _garage;
+            private IEnumerator<int> _dictonaryKeys;
+
+            public Enumerator(Garage garage)
+            {
+                _garage = garage;
+                _dictonaryKeys = garage._items.Keys.GetEnumerator();
+            }
+            
+            object IEnumerator.Current
+            {
+                get
+                {
+                    var key = _dictonaryKeys.Current;
+                    return _garage._items[key];
+                }
+            }
+            DataTransport IEnumerator<DataTransport>.Current
+            {
+                get
+                {
+                    var key = _dictonaryKeys.Current;
+                    return _garage._items[key];
+                }
+            }
+
+            public void Dispose()
+            {
+                
+            }
+
+            public bool MoveNext() => _dictonaryKeys.MoveNext();
+            public void Reset() => _dictonaryKeys.Reset();
+        }
     }
 }
