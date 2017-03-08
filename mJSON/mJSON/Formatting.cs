@@ -8,5 +8,6 @@ namespace mJSON
         None = 0,
         Indented = 1,
         IncludeTypeName = 2,
+        BreakReqursion = 4
     }
 }

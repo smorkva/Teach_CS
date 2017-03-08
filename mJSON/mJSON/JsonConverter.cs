@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Globalization;
 using mJSON.Utils;
@@ -11,14 +12,17 @@ namespace mJSON
         private JsonWriter _writer;
         private string _typeIdentifier = "$type";
         private bool _showTypeIdentifier;
+        private bool _breakRecure;
+        private Stack<object> _stackOfParents;
 
         private JsonConverter(Formatting format = Formatting.None)
         {
             _writer = new JsonWriter((format & Formatting.Indented) == Formatting.Indented);
             _showTypeIdentifier = (format & Formatting.IncludeTypeName) == Formatting.IncludeTypeName;
+            _breakRecure = (format & Formatting.BreakReqursion) == Formatting.BreakReqursion;
+            _stackOfParents = new Stack<object>(20);
         }
-
-        #region Serialize objects
+        
         private void _serialize()
         {
             _writer.Append("null");
@@ -33,7 +37,7 @@ namespace mJSON
         }
         private void _serialize(IList value)
         {
-            if (value.Count == 0)
+            if (0 == value.Count)
             {
                 _writer.Append("[]");
             }
@@ -54,7 +58,7 @@ namespace mJSON
         }
         private void _serialize(IDictionary value)
         {
-            if (value.Count == 0)
+            if (0 == value.Count)
             {
                 _writer.Append("{}");
             }
@@ -85,29 +89,13 @@ namespace mJSON
                 value is short ||
                 value is uint ||
                 value is ulong ||
-                value is ushort ||
-                
-                value is int? ||
-                value is long? ||
-                value is byte? ||
-                value is sbyte? ||
-                value is short? ||
-                value is uint? ||
-                value is ulong? ||
-                value is ushort?)
+                value is ushort)
             {
-                if (null != value)
-                {
-                    _writer.Append(value.ToString());
-                }
-                else
-                {
-                    _serialize();
-                }
+                _writer.Append(value.ToString());
             }
             else
             {
-                if (value is float || value is double || value is float? || value is double?)
+                if (value is float || value is double)
                 {
                     if (null == value)
                     {
@@ -138,6 +126,21 @@ namespace mJSON
         }
         private void _serializeObject(object value)
         {
+            //kill requre
+            if (_stackOfParents.Contains(value))
+            {
+                if (_breakRecure)
+                {
+                    _serialize();
+                    return;
+                }
+                else
+                {
+                    throw new Exception("Recursion detected");
+                }
+            }
+
+            _stackOfParents.Push(value);
             _writer.OpenBracket('{');
 
             var type = value.GetType();
@@ -180,19 +183,19 @@ namespace mJSON
             }
 
             _writer.CloseBracket('}');
+            _stackOfParents.Pop();
         }
-        #endregion
 
         private void _serializeItem(object value)
         {
-            if (value == null)
+            if (null == value)
             {
                 _serialize();
             }
             else
             {
                 var asString = value as string;
-                if (asString != null)
+                if (null != asString)
                 {
                     _serialize(asString);
                 }
@@ -206,19 +209,22 @@ namespace mJSON
                     {
                         if (value is Enum)
                         {
-                            _serialize(value.ToString());
+                            var asEnum = value as Enum;
+                            var enumValue = Convert.ChangeType(asEnum, asEnum.GetTypeCode());
+                            
+                            _serialize(enumValue);
                         }
                         else
                         {
                             var asList = value as IList;
-                            if (asList != null)
+                            if (null != asList)
                             {
                                 _serialize(asList);
                             }
                             else
                             {
                                 var asDictonary = value as IDictionary;
-                                if (asDictonary != null)
+                                if (null != asDictonary)
                                 {
                                     _serialize(asDictonary);
                                 }

@@ -2,7 +2,6 @@
 using System.IO;
 using System.Text;
 using System.Globalization;
-using System.Text.RegularExpressions;
 
 namespace mJSON.Utils
 {
@@ -26,7 +25,7 @@ namespace mJSON.Utils
             _strWriter = new StringWriter(_strBuilder, CultureInfo.InvariantCulture);
             _strWriter.NewLine = "";
            
-            if (_strWriter == null)
+            if (null == _strWriter)
             {
                 throw new ArgumentNullException(nameof(_strWriter));
             }
@@ -55,7 +54,7 @@ namespace mJSON.Utils
         }
         public void AddIndent()
         {
-            for (int i = 0; i < _indentStep; i++)
+            for (var i = 0; i < _indentStep; i++)
             {
                 _strWriter.Write(_indendValue);
             }
@@ -98,11 +97,59 @@ namespace mJSON.Utils
         }
         public void Append(string value)
         {
-            _strWriter.Write(value);
+            foreach (var c in value)
+            {
+                switch (c)
+                {
+                    case '"':
+                        _strWriter.Write(@"\""");
+                        break;
+
+                    case '\\':
+                        _strWriter.Write(@"\\");
+                        break;
+
+                    case '\b':
+                        _strWriter.Write(@"\b");
+                        break;
+
+                    case '\f':
+                        _strWriter.Write(@"\f");
+                        break;
+
+                    case '\n':
+                        _strWriter.Write(@"\n");
+                        break;
+
+                    case '\r':
+                        _strWriter.Write(@"\r");
+                        break;
+
+                    case '\t':
+                        _strWriter.Write(@"\t");
+                        break;
+
+                    default:
+                        int codepoint = Convert.ToInt32(c);
+                        if ((codepoint >= 32) && (codepoint <= 126))
+                        {
+                            _strWriter.Write(c);
+                        }
+                        else
+                        {
+                            _strWriter.Write("\\u" + Convert.ToString(codepoint, 16).PadLeft(4, '0'));
+                        }
+                        break;
+                }
+            }
+
+            //_strWriter.Write(value);
         }
         public void AppendQuoted(string value)
         {
-            _strWriter.Write($"\"{value}\"");
+            _strWriter.Write($"\"");
+            Append(value);
+            _strWriter.Write($"\"");
         }
         public override string ToString()
         {
